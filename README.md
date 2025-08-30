@@ -104,6 +104,50 @@ buf[0] = 7        // 修改 buf 不影响 xs
 go run example/collection101/main.go
 ```
 
+## 今日学习要点（复习清单）
+
+- 导出规则与命名：
+  - 首字母大写为导出（跨包可见），小写为包内使用。
+  - 如需对外使用，函数命名为 `UniqueStrings`；当前 `package main` 内使用用小写即可。
+
+- 去重思路（uniqueStrings）：
+  - 粗糙版：结果切片线性查重，O(n^2)。
+  - 优化版：`seen := map[string]struct{}` 判重，O(n)；保持首次出现顺序。
+  - 语义细节：输入为 `nil` 返回 `nil`，空切片返回空切片（已实现）。
+
+- 交集函数（intersectInts）：
+  - 功能：返回 a 与 b 的去重交集；结果顺序不作保证。
+  - 优化版：较短切片进集合，遍历另一边，O(n+m)；用 `added` 去重。
+  - 空输入约定：任一为空时返回空切片；若两者均为 `nil`，返回 `nil`（已实现）。
+
+- 分块（chunkSlice）：
+  - 差异：视图 vs 拷贝。`xs[i:end]` 是共享底层数组的视图；修改可能影响原切片。
+  - 安全版：对每个块 `copy` 出独立切片，避免副作用（已实现）。
+  - 示例已补充到 README，理解共享底层数组的风险。
+
+- 安全访问（safeGet）：
+  - 约定：越界返回零值与 `false`；合法返回元素与 `true`。
+
+- 泛型速记：
+  - `func chunkSlice[T any](xs []T, size int) [][]T` 中 `[T any]` 表示类型参数 T 可为任意类型。
+  - 可扩展为 `T comparable` 等约束实现泛型去重。
+
+- 表驱动测试：
+  - 结构：定义用例切片 + `t.Run` 子测试 + 明确断言。
+  - 路径：`example/collection101/main_test.go` 覆盖四个函数的常见与边界场景。
+  - 运行：`go test -v ./example/collection101`，或 `go test ./...`。
+
+- 覆盖率：
+  - 命令：`go test -coverprofile=cov.out ./example/collection101`，`go tool cover -func=cov.out`/`-html=cov.out`。
+  - 作用：发现未执行的代码块；不能代表测试充分性，仍需设计好断言与场景。
+
+## 明日建议练习
+
+- 将 `uniqueStrings` 改为泛型 `unique[T comparable]`，并补相应测试。
+- 为 `intersectInts` 增加一个“顺序不敏感”的对比测试版本（排序后比较 vs 集合比较）。
+- 编写一个演示共享底层数组坑点的最小程序（append 导致的覆盖），巩固切片语义。
+- 尝试添加基准测试（Benchmark）对比粗糙版与优化版的性能差异。
+
 ## 接下来要做的（学习计划）
 
 1) 写测试
